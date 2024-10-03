@@ -3,6 +3,14 @@
 
 using namespace std;
 
+Color Green = Color{38, 185, 154, 255};
+Color DarkGreen = Color{20, 160, 133, 255};
+Color LightGreen = Color{129, 204, 184, 255};
+Color Yellow = Color{ 243, 219, 91, 255};
+
+int player_score = 0;
+int cpu_score = 0;
+
 class Ball{
 public:
 float x,y;
@@ -10,7 +18,7 @@ int speedx, speedy;
 int radius;
 
 void Draw(){
-    DrawCircle(x, y, 20, WHITE);
+    DrawCircle(x, y, 20, Yellow);
 }
 
 void Update(){
@@ -21,12 +29,23 @@ void Update(){
     {
         speedy *= -1;
     }
-    if (x + radius >= GetScreenWidth() || x - radius <= 0)
+    if (x + radius >= GetScreenWidth()){
+        cpu_score += 1;
+        resetBall();
+    }
+    if (x - radius <= 0)
     {
-        speedx *= -1;
+        player_score += 1;
+        resetBall();
     }
 }
+
+void resetBall(){
+    x = GetScreenWidth()/2;
+    y = GetScreenHeight()/2;
+}
 };
+
 
 class Paddle {
 protected:
@@ -48,6 +67,7 @@ int speed;
 
 void Draw() {
     DrawRectangle(x, y, width, height, WHITE);
+    DrawRectangleRounded(Rectangle{x, y, width, height}, 0.8, 0, WHITE);
 }
 
 
@@ -125,13 +145,28 @@ int main () {
         player.Update();
         cpu.Update(ball.y);
 
+        // checking for collisions
+        if (CheckCollisionCircleRec(Vector2{ball.x, ball.y}, ball.radius, Rectangle{player.x, player.y, player.width, player.height})){
+            ball.speedx *= -1;
+        }
+        if (CheckCollisionCircleRec(Vector2{ball.x, ball.y}, ball.radius, Rectangle{cpu.x, cpu.y, cpu.width, cpu.height})){
+            ball.speedx *= -1;
+        }
+
         // drawing
-        ClearBackground(BLACK); // clears the background before drawing the new frames
+        ClearBackground(DarkGreen); // clears the background before drawing the new frames
+        DrawRectangle(screen_width/2, 0, screen_width/2, screen_height, Green);
+        DrawCircle(screen_width/2, screen_height/2, 150, LightGreen);
+
+
         ball.Draw();
         cpu.Draw();
         player.Draw();
         // draw line
         DrawLine(screen_width/2, 0, screen_width/2, screen_height, WHITE);
+        DrawText(TextFormat("%i", cpu_score), screen_width/4 - 20, 20, 80, WHITE);
+        DrawText(TextFormat("%i", player_score), 3 * screen_width/4 - 20, 20, 80, WHITE);
+
 
         EndDrawing();
     }
